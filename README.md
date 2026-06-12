@@ -88,11 +88,11 @@ grasp and alternates the cube between the two pedestals on each run.
 
 ### GitHub Pages (included)
 
-`.github/workflows/deploy.yml` builds the site and publishes it to GitHub
-Pages on every push to `main`:
-
-1. In the repository settings, set **Pages → Source** to **GitHub Actions**.
-2. Push to `main` (or run the workflow manually via *workflow_dispatch*).
+`.github/workflows/deploy.yml` builds the site on every push to `main` and
+force-pushes `dist/` to the `gh-pages` branch, which GitHub serves as the
+Pages site automatically. You can also trigger it manually via
+*workflow_dispatch*. If the site doesn't appear after the first run, check
+**Settings → Pages** and select `gh-pages` as the source branch.
 
 Because Vite is configured with `base: "./"`, the build works under the
 `/<repo>/` project path without further configuration.
