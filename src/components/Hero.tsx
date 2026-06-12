@@ -1,25 +1,47 @@
 import RobotViewer from "./RobotViewer";
+import TerminalStatus from "./TerminalStatus";
 import { useRobotViewer } from "../three/useRobotViewer";
 
-/** Full-height hero: headline plus the live cinematic showcase viewer. */
+const TICKER_ITEMS = [
+  "six-axis platform",
+  "digital twin runtime",
+  "browser-native demo",
+  "simulation-first",
+  "modular gripper",
+  "pick · sort · assemble",
+  "arc-6 / concept cell",
+];
+
+/** Full-viewport hero: the live studio scene with overlaid chrome. */
 export default function Hero() {
   const viewer = useRobotViewer("showcase");
+  const ticker = [...TICKER_ITEMS, ...TICKER_ITEMS];
 
   return (
     <section className="hero" id="top">
-      <div className="hero-glow" aria-hidden="true" />
-      <div className="hero-inner">
+      <div className="hero-viewer">
+        <RobotViewer viewer={viewer} />
+      </div>
+
+      <div className="hero-overlay">
+        <div className="hero-session mono">
+          01_xf
+          <br />
+          live_session
+        </div>
+
         <div className="hero-copy">
-          <span className="eyebrow">ARC-6 · six-axis articulated platform</span>
+          <span className="eyebrow">ARC-6 / six-axis articulated platform</span>
           <h1 className="hero-title">
-            Precision in motion.
+            Precision
+            <br />
+            in motion.
             <br />
             <span className="hero-title-accent">Designed to be driven.</span>
           </h1>
           <p className="hero-sub">
-            ARC-6 is a compact six-axis robot arm that connects design,
-            simulation and production in one workflow — and you can take the
-            controls right here in your browser.
+            A compact six-axis robot arm that connects design, simulation and
+            production — live in your browser, right now.
           </p>
           <div className="hero-ctas">
             <a href="#demo" className="btn btn-primary">
@@ -29,28 +51,32 @@ export default function Hero() {
               Explore capabilities
             </a>
           </div>
-          <dl className="hero-stats">
-            <div>
-              <dt>6</dt>
-              <dd>controlled axes</dd>
-            </div>
-            <div>
-              <dt>1:1</dt>
-              <dd>digital twin</dd>
-            </div>
-            <div>
-              <dt>0&nbsp;install</dt>
-              <dd>browser demo</dd>
-            </div>
-          </dl>
         </div>
-        <div className="hero-viewer">
-          <RobotViewer viewer={viewer} />
+
+        <div className="hero-status">
+          <TerminalStatus viewer={viewer} />
+        </div>
+
+        <div className="hero-brand">
+          ARC<sup>6</sup>
+        </div>
+
+        <div className="hero-coords mono">
+          axes=6
+          <br />
+          cell&lt;1m²
+          <br />
+          fmt=glb
+        </div>
+
+        <div className="ticker">
+          <div className="ticker-track">
+            {ticker.map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
+          </div>
         </div>
       </div>
-      <a className="hero-scroll" href="#capabilities" aria-label="Scroll to capabilities">
-        <span />
-      </a>
     </section>
   );
 }

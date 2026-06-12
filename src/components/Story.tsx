@@ -5,7 +5,7 @@ export default function Story() {
     <section className="section section-alt" id="story">
       <div className="section-inner story-grid">
         <Reveal>
-          <span className="eyebrow">Product story</span>
+          <span className="eyebrow">02_product story</span>
           <h2 className="section-title">
             One model, from CAD to customer demo
           </h2>

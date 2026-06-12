@@ -1,8 +1,8 @@
 # ARC-6 — Six-Axis Robot Arm Concept Site
 
-A premium, dark, cinematic product landing page for **ARC-6**, a fictional
-six-axis industrial robot arm — with a fully interactive 3D demo you can
-drive in the browser.
+A premium, bright-studio product landing page for **ARC-6**, a fictional
+six-axis industrial robot arm — minimal monochrome design with full-page
+3D scenes and a fully interactive demo you can drive in the browser.
 
 The page presents the robot as a real product (capabilities, story, use
 cases, technical highlights) and then hands visitors the controller: orbit

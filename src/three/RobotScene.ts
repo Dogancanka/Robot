@@ -15,8 +15,12 @@ export interface RobotSceneOptions {
 }
 
 const MODEL_SCALE = 1 / 42; // CAD cm → scene meters-ish
-const DEFAULT_CAM = new THREE.Vector3(2.5, 1.75, 3.1);
-const DEFAULT_TARGET = new THREE.Vector3(0.45, 0.85, 0);
+// The showcase target sits left of the robot so the full-bleed hero frames
+// the machine right of the headline copy.
+const CAM_BY_MODE = {
+  showcase: { pos: new THREE.Vector3(2.9, 1.5, 3.3), target: new THREE.Vector3(-0.2, 0.8, 0) },
+  lab: { pos: new THREE.Vector3(2.5, 1.75, 3.1), target: new THREE.Vector3(0.45, 0.85, 0) },
+} as const;
 
 /**
  * Owns the WebGL canvas: rendering, lighting, camera, cinematic orbit and
@@ -46,16 +50,16 @@ export class RobotScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.12;
     this.canvas = this.renderer.domElement;
     this.canvas.style.display = "block";
     container.appendChild(this.canvas);
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.05, 80);
-    this.camera.position.copy(DEFAULT_CAM);
+    this.camera.position.copy(CAM_BY_MODE[opts.mode].pos);
 
     this.controls = new OrbitControls(this.camera, this.canvas);
-    this.controls.target.copy(DEFAULT_TARGET);
+    this.controls.target.copy(CAM_BY_MODE[opts.mode].target);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.minDistance = 1.2;
@@ -81,14 +85,23 @@ export class RobotScene {
   }
 
   private resizeObserver: ResizeObserver;
+  private idleTimer = 0;
+  /** Extra camera pull-back for narrow (portrait) viewports. */
+  private distScale = 1;
 
   private buildEnvironment(): void {
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
+    // Bright studio: background and fog share one tone so distance washes
+    // out into the page, like an infinite white cyclorama.
+    const studio = new THREE.Color(0xe8e9eb);
+    this.scene.background = studio;
+    this.scene.fog = new THREE.Fog(studio, 7, 17);
+
     // Key light with soft shadows
-    const key = new THREE.DirectionalLight(0xffffff, 2.1);
-    key.position.set(4, 6, 3);
+    const key = new THREE.DirectionalLight(0xffffff, 1.9);
+    key.position.set(4, 7, 3);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
     key.shadow.camera.left = -3.5;
@@ -97,45 +110,30 @@ export class RobotScene {
     key.shadow.camera.bottom = -3.5;
     key.shadow.camera.far = 20;
     key.shadow.bias = -0.0004;
-    key.shadow.radius = 6;
+    key.shadow.radius = 10;
     this.scene.add(key);
 
-    // Cool rim/fill lights for the blue accent mood
-    const rim = new THREE.DirectionalLight(0x5b8cff, 0.9);
-    rim.position.set(-5, 3, -4);
-    this.scene.add(rim);
-    const fill = new THREE.AmbientLight(0x223044, 0.6);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0xd8dadd, 0.85);
+    this.scene.add(hemi);
+    const fill = new THREE.DirectionalLight(0xeef1f6, 0.5);
+    fill.position.set(-5, 3, -4);
     this.scene.add(fill);
 
-    // Floor: shadow catcher + subtle grid
+    // Seamless white floor that catches a soft grey contact shadow.
     const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(14, 64),
-      new THREE.ShadowMaterial({ opacity: 0.34 })
+      new THREE.CircleGeometry(30, 64),
+      new THREE.MeshStandardMaterial({ color: 0xe8e9eb, roughness: 0.96, metalness: 0 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     this.scene.add(floor);
 
-    const grid = new THREE.GridHelper(28, 56, 0x2a3a55, 0x171f30);
+    // Barely-there grid, fading into the fog.
+    const grid = new THREE.GridHelper(28, 56, 0xc9ccd1, 0xd9dbde);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.5;
+    (grid.material as THREE.Material).opacity = 0.35;
     grid.position.y = 0.001;
     this.scene.add(grid);
-
-    // Soft blue glow disc under the robot
-    const glow = new THREE.Mesh(
-      new THREE.CircleGeometry(1.05, 48),
-      new THREE.MeshBasicMaterial({
-        color: 0x3b6fff,
-        transparent: true,
-        opacity: 0.1,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-    );
-    glow.rotation.x = -Math.PI / 2;
-    glow.position.y = 0.002;
-    this.scene.add(glow);
   }
 
   private async loadRobot(): Promise<void> {
@@ -165,8 +163,15 @@ export class RobotScene {
     this.opts.onReady?.(usingGLB);
 
     if (this.opts.mode === "showcase") {
-      // A gentle wake-up motion sells the product immediately.
+      // Keep the hero alive: wake up with an inspection sweep, then loop
+      // calm demo motion for as long as nobody is driving the robot.
       window.setTimeout(() => void this.rig?.inspect(), 900);
+      let alternate = false;
+      this.idleTimer = window.setInterval(() => {
+        if (!this.rig || this.rig.busy) return;
+        alternate = !alternate;
+        void (alternate ? this.rig.pickAndPlace() : this.rig.inspect());
+      }, 16000);
     }
   }
 
@@ -178,14 +183,14 @@ export class RobotScene {
     if (this.cinematic) {
       this.cinTime += dt;
       const t = this.cinTime * 0.14;
-      const radius = 3.7 + Math.sin(t * 0.7) * 0.45;
+      const radius = (3.7 + Math.sin(t * 0.7) * 0.45) * this.distScale;
       const height = 1.7 + Math.sin(t * 0.5) * 0.5;
       this.camera.position.set(
         Math.cos(t) * radius,
         height,
         Math.sin(t) * radius
       );
-      this.camera.lookAt(DEFAULT_TARGET);
+      this.camera.lookAt(CAM_BY_MODE[this.opts.mode].target);
     } else {
       this.controls.update();
     }
@@ -198,14 +203,25 @@ export class RobotScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+
+    // Portrait screens crop the horizontal FOV hard; pull the camera back
+    // proportionally so the whole cell stays in frame on phones.
+    const prev = this.distScale;
+    this.distScale = Math.min(Math.pow(Math.max(1, 1.2 / this.camera.aspect), 0.7), 2);
+    if (Math.abs(this.distScale - prev) > 1e-3) {
+      const t = this.controls.target;
+      this.camera.position.sub(t).multiplyScalar(this.distScale / prev).add(t);
+      this.controls.update();
+    }
   }
 
   // ---- Public API ----------------------------------------------------------
 
   resetCamera(): void {
     this.setCinematic(false);
-    this.camera.position.copy(DEFAULT_CAM);
-    this.controls.target.copy(DEFAULT_TARGET);
+    const { pos, target } = CAM_BY_MODE[this.opts.mode];
+    this.camera.position.copy(pos).sub(target).multiplyScalar(this.distScale).add(target);
+    this.controls.target.copy(target);
     this.controls.update();
   }
 
@@ -231,6 +247,7 @@ export class RobotScene {
 
   dispose(): void {
     this.disposed = true;
+    window.clearInterval(this.idleTimer);
     this.resizeObserver.disconnect();
     this.renderer.setAnimationLoop(null);
     this.controls.dispose();

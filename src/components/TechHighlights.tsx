@@ -14,7 +14,7 @@ export default function TechHighlights() {
     <section className="section section-alt" id="specs">
       <div className="section-inner">
         <Reveal>
-          <span className="eyebrow">Technical highlights</span>
+          <span className="eyebrow">04_technical highlights</span>
           <h2 className="section-title">Calm numbers, honest scope</h2>
           <p className="section-lead">
             ARC-6 is a concept platform. The figures below describe the demo

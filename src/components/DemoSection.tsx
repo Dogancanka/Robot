@@ -1,30 +1,34 @@
-import Reveal from "./Reveal";
 import RobotViewer from "./RobotViewer";
 import ControlPanel from "./ControlPanel";
+import TerminalStatus from "./TerminalStatus";
 import { useRobotViewer } from "../three/useRobotViewer";
 
-/** "Try it in the browser" — the full interactive cell with controller. */
+/** "Try it in the browser" — a full-viewport cell with floating controller. */
 export default function DemoSection() {
   const viewer = useRobotViewer("lab");
 
   return (
-    <section className="section" id="demo">
-      <div className="section-inner">
-        <Reveal>
-          <span className="eyebrow">Live demo</span>
-          <h2 className="section-title">Try it in the browser</h2>
-          <p className="section-lead">
-            This is the actual ARC-6 digital twin. Orbit the cell, run the
-            pick-and-place cycle, or open the advanced panel and drive each
-            joint yourself. Click the viewer first to enable keyboard control.
-          </p>
-        </Reveal>
-        <Reveal delay={120}>
-          <div className="demo-layout">
-            <RobotViewer viewer={viewer} keyboard className="viewer-lab" />
-            <ControlPanel viewer={viewer} />
-          </div>
-        </Reveal>
+    <section className="demo-section" id="demo">
+      <div className="demo-viewer">
+        <RobotViewer viewer={viewer} keyboard />
+      </div>
+
+      <div className="demo-header">
+        <span className="eyebrow">05_live demo</span>
+        <h2 className="section-title">Try it in the browser</h2>
+        <p>
+          The actual ARC-6 digital twin. Orbit the cell, run the
+          pick-and-place cycle, or open advanced controls and drive every
+          joint. Click the scene first for keyboard control.
+        </p>
+      </div>
+
+      <div className="demo-panel-wrap">
+        <ControlPanel viewer={viewer} />
+      </div>
+
+      <div className="demo-status">
+        <TerminalStatus viewer={viewer} />
       </div>
     </section>
   );
