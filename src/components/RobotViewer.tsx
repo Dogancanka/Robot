@@ -9,8 +9,9 @@ interface Props {
 }
 
 /**
- * The 3D canvas with its floating camera controls. Keyboard map (lab mode):
- * arrows = base/shoulder, W/S = elbow, Space = gripper, Enter = demo, R = reset.
+ * The 3D canvas with depth-of-field edge blur, film grain and floating
+ * camera controls. Keyboard map (lab mode): arrows = base/shoulder,
+ * W/S = elbow, Space = gripper, Enter = demo, R = reset.
  */
 export default function RobotViewer({ viewer, keyboard = false, className = "" }: Props) {
   const { containerRef, sceneRef, ready, cinematic } = viewer;
@@ -70,10 +71,16 @@ export default function RobotViewer({ viewer, keyboard = false, className = "" }
       role={keyboard ? "application" : undefined}
       aria-label="Interactive 3D robot arm viewer"
     >
+      <div className="viewer-fx" aria-hidden="true">
+        <div className="viewer-fx-blur viewer-fx-blur-b" />
+        <div className="viewer-fx-blur viewer-fx-blur-l" />
+        <div className="viewer-fx-blur viewer-fx-blur-r" />
+        <div className="viewer-grain" />
+      </div>
       {!ready && (
         <div className="viewer-loading">
           <span className="viewer-loading-dot" />
-          Initializing digital twin…
+          initializing_digital_twin
         </div>
       )}
       <div className="viewer-cam-controls">
@@ -83,7 +90,7 @@ export default function RobotViewer({ viewer, keyboard = false, className = "" }
           onClick={() => sceneRef.current?.resetCamera()}
           title="Reset camera"
         >
-          ⟲ Camera
+          ⟲ camera
         </button>
         <button
           type="button"
@@ -91,10 +98,10 @@ export default function RobotViewer({ viewer, keyboard = false, className = "" }
           onClick={() => sceneRef.current?.toggleCinematic()}
           title="Toggle cinematic orbit"
         >
-          ✦ Cinematic
+          ✦ cinematic
         </button>
       </div>
-      <div className="viewer-hint">Drag to orbit · Scroll to zoom</div>
+      <div className="viewer-hint">drag to orbit · scroll to zoom</div>
     </div>
   );
 }

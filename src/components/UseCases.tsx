@@ -32,7 +32,7 @@ export default function UseCases() {
     <section className="section" id="use-cases">
       <div className="section-inner">
         <Reveal>
-          <span className="eyebrow">Use cases</span>
+          <span className="eyebrow">03_use cases</span>
           <h2 className="section-title">Where ARC-6 goes to work</h2>
         </Reveal>
         <div className="usecase-grid">
